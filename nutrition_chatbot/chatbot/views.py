@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_list_or_404
+from django.shortcuts import render, get_object_or_404
 from .models import FoodItem
 from pinecone import Pinecone
 from sentence_transformers import SentenceTransformer
@@ -6,13 +6,19 @@ import openai
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+import os
+from dotenv import load_dotenv
+import logging
 
 # Create your views here.
+load_dotenv()
+
+logging.basicConfig(level=logging.DEBUG)
 
 # API 및 연결 초기화
-pc = Pinecone(api_key=settings.PINECONE_API_KEY)
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index = pc.Index("nutritiondb")
-openai.api_key=settings.OPENAI_API_KEY
+openai.api_key=os.getenv("OPENAI_API_KEY")
 
 # 모델 불러오기
 embedding_model = SentenceTransformer('jhgan/ko-sroberta-multitask')
@@ -91,7 +97,7 @@ def search_food(request):
     })
 
 def food_detail_json(request, food_code):
-    food = get_list_or_404(FoodItem, id=food_code)
+    food = get_object_or_404(FoodItem, id=food_code)
 
     return JsonResponse({
         "name": food.name,
@@ -110,46 +116,52 @@ def food_detail_json(request, food_code):
     })
 
 def recommend_food(request):
-    query = request.GET.get("q", "")
-    results = []
+    query = request.POST.get("question", "").strip()
     natural_response = ""
 
+    logging.debug(f"사용자 입력 질문: {query}")
+
     if query:
-        query_vector = embedding_model.encode(query).tolist()
+        try:
+            query_vector = embedding_model.encode(query).tolist()
+            logging.debug(f"벡터화된 질문: {query_vector}")
 
-        response = index.query(vector=query_vector, top_k=5, namespace="", include_metadata=True)
+            response = index.query(vector=query_vector, top_k=5, namespace="", include_metadata=True)
+            logging.debug(f"Pinecone 검색 결과: {response}")
 
-        for result in response["matches"]:
-            results.append({
-                "name": result["metadata"].get("name", "N/A"),
-                "description": result["metadata"].get("description", "정보 없음"),
-                "score": result["score"]
-            })
+            if response.get("matches"):
+                result_summary = "\n".join(
+                    [f"- {result['metadata'].get('name', 'N/A')}: {result['metadata'].get('description', '정보 없음')}" for result in response["matches"]]
+                )
+                logging.debug(f"검색된 결과 요약: {result_summary}")
 
-        if results:
-            result_summary = "\n".join(
-                [f"- {item['name']}: {item['description']}" for item in results]
-            )
-            prompt = f"""
-            사용자 질문: "{query}"
-            검색된 식품 정보:
-            {result_summary}
-            위 정보를 바탕으로 사용자 질문에 대한 친절하고 자연스러운 답변을 작성해 주세요.
-            """
-            openai_response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant that provides food recommendations."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=150,
-                temperature=0.7
-            )
-            natural_response = openai_response.choices[0].message.content.strip()
+                prompt = f"""
+                사용자 질문: "{query}"
+                검색된 식품 정보:
+                {result_summary}
+                위 정보를 바탕으로 사용자 질문에 대한 친절하고 자연스러운 답변을 작성해 주세요.
+                """
+                
+                openai_response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant that provides food recommendations."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=300,
+                    temperature=0.7
+                )
+                natural_response = openai_response.choices[0].message.content.strip()
+                logging.debug(f"OpenAI 응답: {natural_response}")
+            else:
+                logging.debug("Pinecone에서 일치하는 결과가 없습니다.")
+                natural_response = "추천할 결과가 없습니다. 질문을 다시 작성해 주세요."
 
+        except Exception as e:
+            logging.error(f"추천 서비스 처리 중 오류 발생: {e}")
+            natural_response = "추천 서비스 처리 중 오류가 발생했습니다."
 
     return render(request, "recommend.html", {
         "query": query,
-        "results": results,
         "natural_response": natural_response
     })

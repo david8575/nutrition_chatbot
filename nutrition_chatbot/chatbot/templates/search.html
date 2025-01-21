@@ -11,6 +11,7 @@
     <header>
         <h1>음식 검색 서비스</h1>
         <p>음식 이름을 입력하거나 원하는 영양소 범위를 설정하세요.</p>
+        <a href="{% url 'homepage' %}" class="back-link">홈페이지로 돌아가기</a>
     </header>
 
     <form method="get" action="{% url 'search_food' %}">
