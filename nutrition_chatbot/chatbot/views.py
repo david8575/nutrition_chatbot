@@ -1,9 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_list_or_404
 from .models import FoodItem
 from pinecone import Pinecone
 from sentence_transformers import SentenceTransformer
 import openai 
 from django.conf import settings
+from django.http import JsonResponse
+from django.core.paginator import Paginator
 
 # Create your views here.
 
@@ -18,14 +20,94 @@ embedding_model = SentenceTransformer('jhgan/ko-sroberta-multitask')
 def homepage(request):
     return render(request, "homepage.html")
 
+
 def search_food(request):
-    query = request.GET.get("q", "")
-    results = []
+    query = request.GET.get("q", "").strip()
+
+    cal_min = request.GET.get("cal_min")
+    cal_max = request.GET.get("cal_max")
+    protein_min = request.GET.get("protein_min")
+    protein_max = request.GET.get("protein_max")
+    fat_min = request.GET.get("fat_min")
+    fat_max = request.GET.get("fat_max")
+    carbs_min = request.GET.get("carbs_min")
+    carbs_max = request.GET.get("carbs_max")
+    sugar_min = request.GET.get("sugar_min")
+    sugar_max = request.GET.get("sugar_max")
+    fiber_min = request.GET.get("fiber_min")
+    fiber_max = request.GET.get("fiber_max")
+    sodium_min = request.GET.get("sodium_min")
+    sodium_max = request.GET.get("sodium_max")
+
+    if not query and not any([cal_min, cal_max, protein_min, protein_max, fat_min, fat_max,
+                              carbs_min, carbs_max, sugar_min, sugar_max, fiber_min, fiber_max,
+                              sodium_min, sodium_max]):
+        return render(request, "search.html", {
+            "query": query,
+            "results": [],
+        })
+
+    results = FoodItem.objects.all()
 
     if query:
-        results = FoodItem.objects.filter(name__icontains=query)
+        results = results.filter(name__icontains=query)
 
-    return render(request, "search.html", {"query": query, "results": results})
+    if cal_min:
+        results = results.filter(energy__gte=float(cal_min))
+    if cal_max:
+        results = results.filter(energy__lte=float(cal_max))
+    if protein_min:
+        results = results.filter(protein__gte=float(protein_min))
+    if protein_max:
+        results = results.filter(protein__lte=float(protein_max))
+    if fat_min:
+        results = results.filter(fat__gte=float(fat_min))
+    if fat_max:
+        results = results.filter(fat__lte=float(fat_max))
+    if carbs_min:
+        results = results.filter(carbs__gte=float(carbs_min))
+    if carbs_max:
+        results = results.filter(carbs__lte=float(carbs_max))
+    if sugar_min:
+        results = results.filter(sugar__gte=float(sugar_min))
+    if sugar_max:
+        results = results.filter(sugar__lte=float(sugar_max))
+    if fiber_min:
+        results = results.filter(fiber__gte=float(fiber_min))
+    if fiber_max:
+        results = results.filter(fiber__lte=float(fiber_max))
+    if sodium_min:
+        results = results.filter(sodium__gte=float(sodium_min))
+    if sodium_max:
+        results = results.filter(sodium__lte=float(sodium_max))
+
+    paginator = Paginator(results, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "search.html", {
+        "query": query,
+        "results": page_obj,
+    })
+
+def food_detail_json(request, food_code):
+    food = get_list_or_404(FoodItem, id=food_code)
+
+    return JsonResponse({
+        "name": food.name,
+        "category": food.category,
+        "main_category": food.main_category,
+        "nutrient_standard": food.nutrient_standard,
+        "energy": food.energy,
+        "protein": food.protein,
+        "fat": food.fat,
+        "carbs": food.carbs,
+        "sugar": food.sugar,
+        "fiber": food.fiber,
+        "sodium": food.sodium,
+        "cholesterol": food.cholesterol,
+        "saturated_fat": food.saturated_fat,
+    })
 
 def recommend_food(request):
     query = request.GET.get("q", "")

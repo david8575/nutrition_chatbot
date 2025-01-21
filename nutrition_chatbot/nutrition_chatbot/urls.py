@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.homepage, name='homepage'),
     path('search/', views.search_food, name='search_food'),
-    path('recommend/',views.recommend_food, name="recommend_food")
+    path('recommend/',views.recommend_food, name="recommend_food"),
+    path('food/<int:food_id>/', views.food_detail_json, name='food_detail_json'),
 ]

@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>메인 페이지</title>
+    <title>dfpl 식품 영양 정보 서비스</title>
     {% load static %}  <!-- static 태그 로드 -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/homepage.css' %}">
 </head>
 <body>
     <header>
-        <h1>dfpl 음식 정보 서비스</h1>
+        <h1>dfpl 식품 영양 정보 서비스</h1>
+        <h2>식품 정보를 검색하거나, 추천을 제공합니다.</h2>
     </header>
 
     <main>
@@ -19,6 +20,10 @@
         </div>
     </main>
 
-    <script src="{% static 'js/script.js' %}"></script>
+    <footer>
+        <p>© 2025 NutirtionService. All rights reserved.</p>
+    </footer>
+
+    <script src="{% static 'js/homepage.js' %}"></script>
 </body>
 </html>
