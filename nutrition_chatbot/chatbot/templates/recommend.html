@@ -28,7 +28,7 @@
         <form method="post" action="{% url 'recommend_food' %}">
             {% csrf_token %}
             <div class="input-group">
-                <input type="text" name="question" placeholder="질문을 입력하세요." required>
+                <input type="text" name="question" placeholder="질문을 입력하세요." autocomplete="off" required>
                 <button type="submit">보내기</button>
             </div>
         </form>

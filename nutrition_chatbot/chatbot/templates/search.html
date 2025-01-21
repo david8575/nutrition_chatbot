@@ -16,7 +16,7 @@
 
     <form method="get" action="{% url 'search_food' %}">
         <div class="search-bar">
-            <input type="text" name="q" placeholder="음식 이름 입력" value="{{ query }}">
+            <input type="text" name="q" placeholder="음식 이름 입력" value="{{ query }}" autocomplete="off">
         </div>
         
         <div class="filters">
