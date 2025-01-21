@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메인 페이지</title>
+    {% load static %}  <!-- static 태그 로드 -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>dfpl 음식 정보 서비스</h1>
+    </header>
+
+    <main>
+        <div class="menu">
+            <a href="{% url 'search_food' %}" class="btn">음식 검색 서비스</a>
+            <a href="{% url 'recommend_food' %}" class="btn">음식 추천 서비스</a>
+        </div>
+    </main>
+
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

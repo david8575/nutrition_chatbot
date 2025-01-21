@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음식 추천 서비스</title>
+</head>
+<body>
+    <h1>음식 추천 서비스</h1>
+
+    <form method="get" action="{% url 'recommend_food' %}">
+        <input type="text" name="q" placeholder="질문을 입력하세요" value="{{ query }}">
+        <button type="submit">추천받기</button>
+    </form>
+
+    <hr>
+
+    {% if query %}
+        <h2>"{{ query }}"에 대한 추천 결과:</h2>
+        {% if results %}
+            <ul>
+                {% for result in results %}
+                    <li>
+                        <strong>{{ result.name }}</strong>: {{ result.description }} (유사도: {{ result.score|floatformat:2 }})
+                    </li>
+                {% endfor %}
+            </ul>
+            <hr>
+            <h3>추천 내용:</h3>
+            <p>{{ natural_response }}</p>
+        {% else %}
+            <p>추천 결과가 없습니다.</p>
+        {% endif %}
+    {% else %}
+        <p>질문을 입력하여 추천 결과를 받아보세요.</p>
+    {% endif %}
+</body>
+</html>
