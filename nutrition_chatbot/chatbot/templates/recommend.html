@@ -1,38 +1,37 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>음식 추천 서비스</title>
+    <title>음식 추천 챗봇</title>
+    <link rel="stylesheet" href="{% static 'css/recommend.css' %}">
 </head>
 <body>
-    <h1>음식 추천 서비스</h1>
+    <header>
+        <h1>음식 추천 챗봇</h1>
+        <a href="{% url 'homepage' %}" class="back-link">홈페이지로 돌아가기</a>
+    </header>
 
-    <form method="get" action="{% url 'recommend_food' %}">
-        <input type="text" name="q" placeholder="질문을 입력하세요" value="{{ query }}">
-        <button type="submit">추천받기</button>
-    </form>
+    <div class="chat-container">
+        <div id="chat-box">
+            {% if query %}
+                <div class="user-message">
+                    <p>{{ query }}</p>
+                </div>
+                <div class="bot-message">
+                    <p>{{ natural_response }}</p>
+                </div>
+            {% endif %}
+        </div>
 
-    <hr>
-
-    {% if query %}
-        <h2>"{{ query }}"에 대한 추천 결과:</h2>
-        {% if results %}
-            <ul>
-                {% for result in results %}
-                    <li>
-                        <strong>{{ result.name }}</strong>: {{ result.description }} (유사도: {{ result.score|floatformat:2 }})
-                    </li>
-                {% endfor %}
-            </ul>
-            <hr>
-            <h3>추천 내용:</h3>
-            <p>{{ natural_response }}</p>
-        {% else %}
-            <p>추천 결과가 없습니다.</p>
-        {% endif %}
-    {% else %}
-        <p>질문을 입력하여 추천 결과를 받아보세요.</p>
-    {% endif %}
+        <form method="post" action="{% url 'recommend_food' %}">
+            {% csrf_token %}
+            <div class="input-group">
+                <input type="text" name="question" placeholder="질문을 입력하세요." autocomplete="off" required>
+                <button type="submit">보내기</button>
+            </div>
+        </form>
+    </div>
 </body>
 </html>
