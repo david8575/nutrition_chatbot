@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # API 및 연결 초기화
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-index = pc.Index("nutritiondb")
+index = pc.Index("nutritiondb2")
 openai.api_key=os.getenv("OPENAI_API_KEY")
 
 # 모델 불러오기
